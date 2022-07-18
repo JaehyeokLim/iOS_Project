@@ -15,7 +15,7 @@ extension UIColor {
 class ViewController: UIViewController {
 
     var motionManager = CMMotionManager()
-    var motion = CMMotionManager()
+    var altimeterManger = CMAltimeter()
     var currentMaxAccelX: Double = 0
     var currentMaxAccelY: Double = 0
     var currentMaxAccelZ: Double = 0
@@ -34,25 +34,10 @@ class ViewController: UIViewController {
         view.backgroundColor = UIColor.backgroundColor
     }
     
-    func motions() {
-        motion.startAccelerometerUpdates()
-        
-        motion.accelerometerUpdateInterval = 3
-        Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            if let data = self.motion.accelerometerData {
-                let x = data.acceleration.x
-                let y = data.acceleration.y
-                let z = data.acceleration.z
-                
-                print("x, y, z = " + "\(x), \(y), \(z)")
-            }
-        }
-    }
-    
     func motionManagerInit() {
-        motionManager.accelerometerUpdateInterval = 5
-        motionManager.gyroUpdateInterval = 5
-
+        motionManager.accelerometerUpdateInterval = 5 / 15
+        motionManager.gyroUpdateInterval = 5 / 15
+        
         if let currentValue = OperationQueue.current {
             motionManager.startAccelerometerUpdates(to: currentValue, withHandler: {
                     (accelerometerData: CMAccelerometerData!, error: Error!) -> Void in
@@ -61,7 +46,7 @@ class ViewController: UIViewController {
                         print("\(error!)")
                     }
                 })
-            
+
             motionManager.startGyroUpdates(to: currentValue, withHandler: {
                 (gyroData: CMGyroData!, error: Error!) -> Void in
                 self.outputRotationData(gyroData.rotationRate)
@@ -69,6 +54,26 @@ class ViewController: UIViewController {
                     print("\(error!)")
                 }
             })
+            
+            if CMAltimeter.isRelativeAltitudeAvailable() {
+                altimeterManger.startRelativeAltitudeUpdates(to: currentValue, withHandler: {
+                    (altimeterData: CMAltitudeData!, error: Error!) -> Void in
+                    self.outputAlititudeData(altimeterData)
+                    if (error != nil) {
+                        print("\(error!)")
+                    }
+                })
+            }
+            
+//            if CMAltimeter.isAbsoluteAltitudeAvailable() {
+//                altimeterManger.startAbsoluteAltitudeUpdates(to: currentValue, withHandler: {
+//                    (altimeterData: CMAbsoluteAltitudeData!, error: Error!) -> Void in
+//                    self.outputAbsoluteAlitituedData(altimeterData)
+//                    if (error != nil) {
+//                        print("\(error!)")
+//                    }
+//                })
+//            }
         }
     }
     
@@ -117,6 +122,15 @@ class ViewController: UIViewController {
         print("maxRotX = " + String(format: "%.2f", currentMaxRotX))
         print("maxRotY = " + String(format: "%.2f", currentMaxRotY))
         print("maxRotZ = " + String(format: "%.2f", currentMaxRotZ))
+    }
+    
+    func outputAlititudeData(_ altitude: CMAltitudeData) {
+        print("relativeAltitude = \(altitude.relativeAltitude)")
+        print("pressure = \(altitude.pressure)")
+    }
+    
+    func outputAbsoluteAlitituedData(_ altitude: CMAbsoluteAltitudeData) {
+        print("absoluteAltitude = \(altitude.altitude)")
     }
 }
 
