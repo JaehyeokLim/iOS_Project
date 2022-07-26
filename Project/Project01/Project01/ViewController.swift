@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 import CoreMotion
 
 extension UIColor {
@@ -13,30 +14,56 @@ extension UIColor {
 }
 
 class ViewController: UIViewController {
-
+    
+    var list = ""
+    
     var motionManager = CMMotionManager()
     var altimeterManger = CMAltimeter()
-    var currentMaxAccelX: Double = 0
-    var currentMaxAccelY: Double = 0
-    var currentMaxAccelZ: Double = 0
-    var currentMaxRotX: Double = 0
-    var currentMaxRotY: Double = 0
-    var currentMaxRotZ: Double = 0
-
+    
+    var accState:Bool = false
+    var rotState:Bool = false
+    var preState:Bool = false
+    
+    var accArray:[String] = []
+    var rotArray:[String] = []
+    var preArray:[String] = []
+    
+    var currentDate = Date().timeIntervalSince1970
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureLayout()
-        motionManagerInit()
+        print(currentDate)
+        createCSV()
     }
     
     func configureLayout() {
         view.backgroundColor = UIColor.backgroundColor
+        
+        let button = UIButton()
+        
+        button.setImage(UIImage(systemName: "cursorarrow.click"), for: .normal)
+        button.contentHorizontalAlignment = .fill
+        button.contentVerticalAlignment = .fill
+        
+        view.addSubview(button)
+        
+        button.snp.makeConstraints { make in
+            make.center.equalTo(view)
+            make.size.equalTo(CGSize(width: 50, height: 50))
+        }
+        
+        button.addTarget(self, action: #selector(buttonAction(_:)), for: .touchUpInside)
+    }
+    
+    @objc func buttonAction(_ sender: UIButton) {
+        motionManagerInit()
+        
     }
     
     func motionManagerInit() {
-        motionManager.accelerometerUpdateInterval = 5 / 15
-        motionManager.gyroUpdateInterval = 5 / 15
+        motionManager.accelerometerUpdateInterval = 1 / 15
+        motionManager.gyroUpdateInterval = 1 / 15
         
         if let currentValue = OperationQueue.current {
             motionManager.startAccelerometerUpdates(to: currentValue, withHandler: {
@@ -46,6 +73,7 @@ class ViewController: UIViewController {
                         print("\(error!)")
                     }
                 })
+            print("hello")
 
             motionManager.startGyroUpdates(to: currentValue, withHandler: {
                 (gyroData: CMGyroData!, error: Error!) -> Void in
@@ -64,73 +92,132 @@ class ViewController: UIViewController {
                     }
                 })
             }
-            
-//            if CMAltimeter.isAbsoluteAltitudeAvailable() {
-//                altimeterManger.startAbsoluteAltitudeUpdates(to: currentValue, withHandler: {
-//                    (altimeterData: CMAbsoluteAltitudeData!, error: Error!) -> Void in
-//                    self.outputAbsoluteAlitituedData(altimeterData)
-//                    if (error != nil) {
-//                        print("\(error!)")
-//                    }
-//                })
-//            }
         }
     }
     
     func outputAccelerationData(_ acceleration: CMAcceleration) {
         print("accX = " + String(format: "%.2f", acceleration.x))
-
-        if fabs(acceleration.x) > fabs(currentMaxAccelX) {
-            currentMaxAccelX = acceleration.x
-        }
         
         print("accY = " + String(format: "%.2f", acceleration.y))
 
-        if fabs(acceleration.y) > fabs(currentMaxAccelY) {
-            currentMaxAccelY = acceleration.y
-        }
-        
         print("accZ = " + String(format: "%.2f", acceleration.z))
+
         
-        if fabs(acceleration.z) > fabs(currentMaxAccelZ) {
-            currentMaxAccelZ = acceleration.z
+        if accArray.count != 15 {
+            accArray.append(String(fabs(acceleration.x)))
+            accArray.append(String(fabs(acceleration.y)))
+            accArray.append(String(fabs(acceleration.z)))
+            
+        } else {
+            
+            if accState == false {
+                accState = true
+                sendToData(array: accArray)
+            }
         }
-        
-        print("maxAccX = " + String(format: "%.2f", currentMaxAccelX))
-        print("maxAccY = " + String(format: "%.2f", currentMaxAccelY))
-        print("maxAccZ = " + String(format: "%.2f", currentMaxAccelZ))
     }
     
     func outputRotationData(_ rotation: CMRotationRate) {
         print("rotX = " + String(format: "%.2f", rotation.x))
         
-        if fabs(rotation.x) > fabs(currentMaxRotX) {
-            currentMaxRotX = rotation.x
-        }
-        
         print("rotY = " + String(format: "%.2f", rotation.y))
         
-        if fabs(rotation.y) > fabs(currentMaxRotY) {
-            currentMaxRotY = rotation.y
-        }
         print("rotZ = " + String(format: "%.2f", rotation.z))
         
-        if fabs(rotation.z) > fabs(currentMaxRotZ) {
-            currentMaxRotZ = rotation.z
+        if rotArray.count != 15 {
+            rotArray.append(String(fabs(rotation.x)))
+            rotArray.append(String(fabs(rotation.y)))
+            rotArray.append(String(fabs(rotation.z)))
+            
+        } else {
+            
+            if rotState == false {
+                rotState = true
+                sendToData(array: rotArray)
+            }
         }
-        
-        print("maxRotX = " + String(format: "%.2f", currentMaxRotX))
-        print("maxRotY = " + String(format: "%.2f", currentMaxRotY))
-        print("maxRotZ = " + String(format: "%.2f", currentMaxRotZ))
     }
     
     func outputAlititudeData(_ altitude: CMAltitudeData) {
-        print("relativeAltitude = \(altitude.relativeAltitude)")
+//        print("relativeAltitude = \(altitude.relativeAltitude)")
         print("pressure = \(altitude.pressure)")
+        
+        if preArray.count != 1 {
+            preArray.append(String(Double(truncating: altitude.pressure)))
+        } else {
+            
+            if preState == false {
+                preState = true
+                sendToData(array: preArray)
+            }
+        }
     }
     
-    func outputAbsoluteAlitituedData(_ altitude: CMAbsoluteAltitudeData) {
-        print("absoluteAltitude = \(altitude.altitude)")
+    func sendToData(array: [String]) {
+        let data = String(currentDate)
+        let startIndexForYear = data.index(data.startIndex, offsetBy: 0)
+        let endIndexForYear = data.index(data.startIndex, offsetBy: 3)
+        let startIndexForOther = data.index(data.startIndex, offsetBy: 4)
+        let rangeYear = startIndexForYear...endIndexForYear
+        let rangeOther = startIndexForOther..<data.endIndex
+        
+        if list.count != 0 {
+            list += "\n" + data[rangeYear]
+            list += "," + data[rangeOther]
+        } else {
+            list += data[rangeYear]
+            list += "," + data[rangeOther]
+        }
+        
+        for i in 0..<array.count {
+            list += ","+array[i]
+        }
+        
+        if accState == true && rotState == true {
+            writeCSV(sensorData: list)
+        }
+    }
+    
+    func createCSV() {
+        let fileManager = FileManager.default
+        
+        let folderName = "newCSVFolder"
+        let csvFileName = "myCSVFile.csv"
+        
+        let documentUrl = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let directoryUrl = documentUrl.appendingPathComponent(folderName)
+        let fileUrl = directoryUrl.appendingPathComponent(csvFileName)
+
+        do {
+            try fileManager.createDirectory(atPath: directoryUrl.path, withIntermediateDirectories: true, attributes: nil)
+        }
+        catch let error as NSError {
+            print("폴더 생성 에러: \(error)")
+        }
+        
+        fileManager.createFile(atPath: fileUrl.path, contents: .none, attributes: nil)
+    }
+    
+    func writeCSV(sensorData: String) {
+        let fileManager = FileManager.default
+        
+        let folderName = "newCSVFolder"
+        let csvFileName = "myCSVFile.csv"
+        
+        let documentUrl = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let directoryUrl = documentUrl.appendingPathComponent(folderName)
+        let fileUrl = directoryUrl.appendingPathComponent(csvFileName)
+        
+        let fileData = sensorData.data(using: .utf8)
+            
+            do {
+                try fileData?.write(to: fileUrl)
+                
+                print("Writing CSV to: \(fileUrl.path)")
+            }
+            catch let error as NSError {
+                print("CSV파일 생성 에러: \(error)")
+            }
     }
 }
 
