@@ -8,6 +8,9 @@
 import UIKit
 import SnapKit
 import CoreMotion
+import AVFoundation
+import MediaPlayer
+import CoreLocation
 
 extension UIColor {
     static let backgroundColor = UIColor(named: "BackgroundColor")
@@ -21,6 +24,7 @@ class ViewController: UIViewController {
     var accArray: [String] = []
     var rotArray: [String] = []
     var preArray: [String] = []
+    var locArray: [CLLocation] = []
     
 //    var accMobiusList: String = ""
 //    var rotMobiusList: String = ""
@@ -33,6 +37,8 @@ class ViewController: UIViewController {
     var preList: String = ""
     
     var count: Int = 1
+
+    var locationManager = CLLocationManager()
     
     let mainLabel: UILabel = {
         let mainLabel = UILabel()
@@ -48,26 +54,29 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureLayout()
+        
         createCSV()
+    
+        getLocationUsagePermission()
+        
+        locationManager.delegate = self
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.requestAlwaysAuthorization()
+        
+        startFunction()
+        
+        if CLLocationManager.locationServicesEnabled() {
+            print("위치 서비스 On 상태")
+            locationManager.startUpdatingLocation() //위치 정보 받아오기 시작
+            print(locationManager.location?.coordinate)
+        } else {
+            print("위치 서비스 Off 상태")
+        }
     }
     
     func configureLayout() {
         view.backgroundColor = UIColor.backgroundColor
-        
-        let button = UIButton()
-        
-        button.setImage(UIImage(systemName: "cursorarrow.click"), for: .normal)
-        button.contentHorizontalAlignment = .fill
-        button.contentVerticalAlignment = .fill
-        
-        view.addSubview(button)
-        
-        button.snp.makeConstraints { make in
-            make.center.equalTo(view)
-            make.size.equalTo(CGSize(width: 100, height: 100))
-        }
-        
-        button.addTarget(self, action: #selector(buttonAction(_:)), for: .touchUpInside)
         
         view.addSubview(mainLabel)
         
@@ -76,10 +85,10 @@ class ViewController: UIViewController {
             make.width.equalTo(view)
         }
     }
-    
-    @objc func buttonAction(_ sender: UIButton) {
+
+    func startFunction() {
         motionManagerInit()
-        Timer.scheduledTimer(timeInterval: 900, target: self, selector: #selector(ViewController.aaa), userInfo: nil, repeats: true)
+        Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(ViewController.aaa), userInfo: nil, repeats: true)
         mainLabel.text = "Start!"
         print("start")
     }
@@ -120,6 +129,7 @@ class ViewController: UIViewController {
     func outputAccelerationData(_ acceleration: CMAcceleration) {
         let currentDate = Date()
         
+//        print("\(acceleration.x)")
         if accArray.count < 45 {
             accArray.append(String(format: "%.3f", acceleration.x))
             accArray.append(String(format: "%.3f", acceleration.y))
@@ -198,6 +208,7 @@ class ViewController: UIViewController {
         
         readFile(fileNumber: count)
         
+        print(count)
         count += 1
 
         accList = ""; rotList = ""; preList = ""
@@ -292,6 +303,31 @@ class ViewController: UIViewController {
             } catch let e {
                 print(e.localizedDescription)
             }
+        }
+    }
+}
+
+extension ViewController: AVAudioPlayerDelegate,CLLocationManagerDelegate {
+    
+    func getLocationUsagePermission() {
+            
+            self.locationManager.requestWhenInUseAuthorization()
+
+    }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            print("GPS 권한 설정됨")
+        case .restricted, .notDetermined:
+            print("GPS 권한 설정되지 않음")
+            getLocationUsagePermission()
+        case .denied:
+            print("GPS 권한 요청 거부됨")
+            getLocationUsagePermission()
+        default:
+            print("GPS: Default")
         }
     }
 }
