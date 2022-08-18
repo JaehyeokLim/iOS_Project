@@ -11,6 +11,7 @@ import CoreMotion
 import AVFoundation
 import MediaPlayer
 import CoreLocation
+import HealthKit
 
 extension UIColor {
     static let backgroundColor = UIColor(named: "BackgroundColor")
@@ -37,8 +38,16 @@ class ViewController: UIViewController {
     var preList: String = ""
     
     var count: Int = 1
-
+    
+    var secondsLeft: Int = 900
+    var secondsSave: Int = 900
+    
     var locationManager = CLLocationManager()
+    
+    let healthStore = HKHealthStore()
+    let typeToShare:HKCategoryType? = HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
+    let typeToRead:HKSampleType? = HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
+    var sleepData:[HKCategorySample] = []
     
     let mainLabel: UILabel = {
         let mainLabel = UILabel()
@@ -51,9 +60,31 @@ class ViewController: UIViewController {
         return mainLabel
     }()
     
+    let timerLabel: UILabel = {
+        let timerLabel = UILabel()
+        
+        timerLabel.font = UIFont.boldSystemFont(ofSize: 50)
+        timerLabel.textColor = UIColor.systemBlue
+        timerLabel.textAlignment = .center
+        
+        return timerLabel
+    }()
+    
+    let updateCountNumberLabel: UILabel = {
+        let updateCountNumberLabel = UILabel()
+        
+        updateCountNumberLabel.text = "0"
+        updateCountNumberLabel.font = UIFont.boldSystemFont(ofSize: 50)
+        updateCountNumberLabel.textColor = UIColor.systemBlue
+        updateCountNumberLabel.textAlignment = .center
+        
+        return updateCountNumberLabel
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureLayout()
+        configure()
         
         createCSV()
     
@@ -69,10 +100,29 @@ class ViewController: UIViewController {
         if CLLocationManager.locationServicesEnabled() {
             print("위치 서비스 On 상태")
             locationManager.startUpdatingLocation() //위치 정보 받아오기 시작
-            print(locationManager.location?.coordinate)
+            print(locationManager.location?.coordinate as Any)
         } else {
             print("위치 서비스 Off 상태")
         }
+    }
+    
+    func timerFunction() {
+        Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (t) in
+            //남은 시간(초)에서 1초 빼기
+            self.secondsLeft -= 1
+
+            //남은 분
+            let minutes = self.secondsLeft / 60
+            //그러고도 남은 초
+            let seconds = self.secondsLeft % 60
+
+            //남은 시간(초)가 0보다 크면
+            if self.secondsLeft >= 0 {
+                self.timerLabel.text = "\(minutes):\(seconds)"
+            } else {
+                self.secondsLeft = self.secondsSave
+            }
+        })
     }
     
     func configureLayout() {
@@ -84,11 +134,71 @@ class ViewController: UIViewController {
             make.top.equalTo(view).offset(100)
             make.width.equalTo(view)
         }
+        
+        view.addSubview(timerLabel)
+        
+        timerLabel.snp.makeConstraints { make in
+            make.center.equalTo(view)
+            make.width.equalTo(view)
+        }
+        
+        view.addSubview(updateCountNumberLabel)
+        
+        updateCountNumberLabel.snp.makeConstraints { make in
+            make.top.equalTo(timerLabel).offset(100)
+            make.width.equalTo(view)
+        }
     }
-
+    
+    func configure() {
+        if !HKHealthStore.isHealthDataAvailable() {
+            requestAuthorization()
+        }else {
+//            retrieveSleepData()
+        }
+    }
+    
+    func requestAuthorization() {
+        
+        self.healthStore.requestAuthorization(toShare: Set([typeToShare!]), read: Set([typeToRead!])) { success, error in
+            if error != nil {
+                print(error.debugDescription)
+            }else{
+                if success {
+                    print("권한이 허락되었습니다.")
+                }else{
+                    print("권한이 아직 없어요.")
+                }
+            }
+        }
+    }
+    
+//    func retrieveSleepData() {
+//        let start = makeStringToDate(str: "2021-05-01")
+//        let end = Date()
+//        let predicate = HKQuery.predicateForSamples(withStart:start, end: end, options: .strictStartDate)
+//        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+//        let query = HKSampleQuery(sampleType: typeToRead!, predicate: predicate, limit: 30, sortDescriptors: [sortDescriptor]) { [weak self] (query, sleepResult, error) -> Void in
+//
+//            if error != nil {
+//                return
+//            }
+//
+//            if let result = sleepResult {
+//                DispatchQueue.main.async {
+//                    //수면 데이터에 받아온 데이터를 설정해줌.
+//                    self?.sleepData = result as? [HKCategorySample] ?? []
+//                    self?.table.reloadData()
+//                }
+//            }
+//        }
+//        healthStore.execute(query)
+//    }
+    
     func startFunction() {
         motionManagerInit()
-        Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(ViewController.aaa), userInfo: nil, repeats: true)
+        Timer.scheduledTimer(timeInterval: 900, target: self, selector: #selector(ViewController.aaa), userInfo: nil, repeats: true)
+        timerFunction()
         mainLabel.text = "Start!"
         print("start")
     }
@@ -210,6 +320,7 @@ class ViewController: UIViewController {
         
         print(count)
         count += 1
+        updateCountNumberLabel.text = String(count)
 
         accList = ""; rotList = ""; preList = ""
     }
@@ -332,3 +443,4 @@ extension ViewController: AVAudioPlayerDelegate,CLLocationManagerDelegate {
     }
 }
 
+one three five seven eight nine ten
