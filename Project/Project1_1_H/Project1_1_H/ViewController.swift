@@ -2,6 +2,9 @@ import UIKit
 import HealthKit
 import SnapKit
 
+public var userSleepStartDate: String = ""
+public var userSleepEndDate: String = ""
+
 class ViewController: UIViewController {
 
     let healthStore = HKHealthStore()
@@ -11,7 +14,17 @@ class ViewController: UIViewController {
     let startDate = Date()
     var uiList = [UIView]()
     var buttonState: Bool = false
-
+    var hours: Int = 0
+    var minutes: Int = 0
+    var seconds: Int = 0
+    var hoursText: String = ""
+    var minutesText: String = ""
+    var secondsText: String = ""
+    var timer: Timer?
+    var sleepDateLoadTimer: Timer?
+    var secondsLeft: Int = 900
+    var secondsSave: Int = 900
+    
     let sleepAndAwakeButton: UIButton = {
         let sleepAndAwakeButton = UIButton()
 
@@ -23,11 +36,34 @@ class ViewController: UIViewController {
         return sleepAndAwakeButton
     }()
     
+    let timerLabel: UILabel = {
+        let timerLabel = UILabel()
+       
+        timerLabel.text = ""
+        timerLabel.font = UIFont.boldSystemFont(ofSize: 30)
+        timerLabel.textAlignment = .center
+        timerLabel.textColor = UIColor.black
+        
+        return timerLabel
+    }()
+    
+    let loadTimerLabel: UILabel = {
+        let loadTimerLabel = UILabel()
+        
+        loadTimerLabel.text = ""
+        loadTimerLabel.font = UIFont.boldSystemFont(ofSize: 30)
+        loadTimerLabel.textAlignment = .center
+        loadTimerLabel.textColor = UIColor.black
+        
+        return loadTimerLabel
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 //        saveSleepData()
         requestAuthorization()
         configure()
+        timerFunction()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -37,7 +73,7 @@ class ViewController: UIViewController {
     let table: UITableView = {
         let table = UITableView()
 
-        table.rowHeight = 22
+        table.rowHeight = 44
         table.register(ViewTableCell.self, forCellReuseIdentifier: "ViewTableCell")
 
         return table
@@ -50,7 +86,7 @@ class ViewController: UIViewController {
         table.dataSource = self
 //        table.delegate = self
 
-        uiList = [table, sleepAndAwakeButton]
+        uiList = [table, sleepAndAwakeButton, timerLabel, loadTimerLabel]
         
         for uiListName in uiList {
             view.addSubview(uiListName)
@@ -66,6 +102,17 @@ class ViewController: UIViewController {
             make.leading.equalTo(view).offset(150)
             make.size.equalTo(CGSize(width: 100, height: 100))
         }
+        
+        timerLabel.snp.makeConstraints { make in
+            make.top.equalTo(view).offset(80)
+            make.width.equalTo(view)
+        }
+        
+        loadTimerLabel.snp.makeConstraints { make in
+            make.top.equalTo(sleepAndAwakeButton).offset(150)
+            make.width.equalTo(view)
+        }
+
 
         if !HKHealthStore.isHealthDataAvailable() {
             requestAuthorization()
@@ -77,20 +124,116 @@ class ViewController: UIViewController {
         sleepAndAwakeButton.addTarget(self, action: #selector(sleepAndAwakeButtonAction(_:)), for: .touchUpInside)
     }
     
+    func timerFunction() {
+        sleepDateLoadTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (t) in
+            //남은 시간(초)에서 1초 빼기
+            self.secondsLeft -= 1
+
+            let hours = self.secondsLeft / 600
+            //남은 분
+            let minutes = self.secondsLeft / 60
+            //그러고도 남은 초
+            let seconds = self.secondsLeft % 60
+
+            //남은 시간(초)가 0보다 크면
+            if self.secondsLeft >= 0 {
+                self.loadTimerLabel.text = "\(hours):\(minutes):\(seconds)"
+            } else {
+                self.secondsLeft = self.secondsSave
+            }
+        })
+    }
+    
+    func loadCycleFunction()  {
+        
+    }
+
+    
     @objc func sleepAndAwakeButtonAction(_: UIButton) {
-        print("hello")
+        
+        let date1 = Date()
+        
         if !buttonState {
             sleepAndAwakeButton.setImage(UIImage(systemName: "moon.fill"), for: .normal)
             sleepAndAwakeButton.tintColor = UIColor.systemPurple
             
+            let sleepStartAlert = UIAlertController(title: "알림", message: "수면모드를 시작하시겠습니까?", preferredStyle: .alert)
+            let sleepStartAlertOkButton = UIAlertAction(title: "OK", style: .default) { _ in
+                
+                self.timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (t) in
+                    self.seconds += 1
+
+                    if self.seconds > 59 {
+                        self.seconds = 0
+                        self.minutes += 1
+                    }
+                    
+                    if self.minutes > 59 {
+                        self.minutes = 0
+                        self.hours += 1
+                    }
+                    
+                    if self.hours < 10 {
+                        self.hoursText = "0\(self.hours)"
+                    } else { self.hoursText = "\(self.hours)" }
+                    
+                    if self.minutes < 10 {
+                        self.minutesText = "0\(self.minutes)"
+                    } else { self.hoursText = "\(self.hours)" }
+                    
+                    if self.seconds < 10 {
+                        self.secondsText = "0\(self.seconds)"
+                    } else { self.secondsText = "\(self.seconds)" }
+                    
+                    self.timerLabel.text = "\(self.hoursText):\(self.minutesText):\(self.secondsText)"
+                })
+            }
+            
+            let sleepStartAlertCancelButton = UIAlertAction(title: "cancel", style: .cancel) { (sleepStartAlertOkButton) in
+                
+            }
+        
+            sleepStartAlert.addAction(sleepStartAlertOkButton)
+            sleepStartAlert.addAction(sleepStartAlertCancelButton)
+            
+            self.present(sleepStartAlert, animated: true, completion: nil)
+            
         } else {
             sleepAndAwakeButton.setImage(UIImage(systemName: "sun.max.fill"), for: .normal)
             sleepAndAwakeButton.tintColor = UIColor.systemYellow
+            
+            let sleepEndAlert = UIAlertController(title: "알림", message: "수면모드를 끝냅니다", preferredStyle: .alert)
+            
+            let sleepEndAlertOkButton = UIAlertAction(title: "OK", style: .default) { [self] (ok) in
+
+                let date2 = Date()
+
+                saveSleepData(start: date1, end: date2)
+                
+                print("완료 시작 시간:\(date1), 끝난 시간: \(date2)")
+                
+                resetTimer()
+            }
+            
+            let sleepEndAlertCancelButton = UIAlertAction(title: "cancel", style: .cancel) { (sleepEndAlertCancelButton) in
+                
+            }
+        
+            sleepEndAlert.addAction(sleepEndAlertOkButton)
+            sleepEndAlert.addAction(sleepEndAlertCancelButton)
+            
+            self.present(sleepEndAlert, animated: true, completion: nil)
         }
         
         buttonState = !buttonState
     }
-
+  
+    func resetTimer() {
+        timer?.invalidate()
+        timer = nil
+        timerLabel.text = ""
+    }
+    
     func requestAuthorization() {
 
         self.healthStore.requestAuthorization(toShare: Set([typeToShare!]), read: Set([typeToRead!])) { success, error in
@@ -105,6 +248,23 @@ class ViewController: UIViewController {
                 }
             }
         }
+    }
+    
+    func saveSleepData(start: Date, end: Date) {
+        let object = HKCategorySample(type: typeToShare!, value: HKCategoryValueSleepAnalysis.inBed.rawValue, start: start,end: end)
+        healthStore.save(object, withCompletion: { (success, error) -> Void in
+            if error != nil {
+                return
+            }
+            if success {
+                print("수면 데이터 저장 완료!")
+                self.retrieveSleepData()
+            } else {
+                print("수면 데이터 저장 실패...")
+            }
+        })
+        
+        table.reloadData()
     }
 
     func retrieveSleepData() {
