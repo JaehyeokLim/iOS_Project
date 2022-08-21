@@ -11,6 +11,7 @@
 		4B920B5BE662AAB37DAC675B /* Pods_Project1_1_H_Project1_1_HUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A240C1A95ED42B559A91787 /* Pods_Project1_1_H_Project1_1_HUITests.framework */; };
 		693755CA493E1FC2255563F4 /* Pods_Project1_1_H.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E925F1B9E4B7094CDCAB88E /* Pods_Project1_1_H.framework */; };
 		FA4E4D2428B144F40064A6CC /* DatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA4E4D2328B144F40064A6CC /* DatePicker.swift */; };
+		FA4E4D2628B220EE0064A6CC /* CustomTabBarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA4E4D2528B220EE0064A6CC /* CustomTabBarViewController.swift */; };
 		FA61264428AB942700E4CD72 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA61264328AB942700E4CD72 /* HealthKit.framework */; };
 		FA61264628AB954600E4CD72 /* TableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA61264528AB954600E4CD72 /* TableViewCell.swift */; };
 		FAA222D528AB8E3D00DE9892 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA222D428AB8E3D00DE9892 /* AppDelegate.swift */; };
@@ -51,6 +52,7 @@
 		9AEB0098F9E921257226E485 /* Pods-Project1_1_HTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Project1_1_HTests.debug.xcconfig"; path = "Target Support Files/Pods-Project1_1_HTests/Pods-Project1_1_HTests.debug.xcconfig"; sourceTree = "<group>"; };
 		EFA5B53353B5DB5EA4E42C97 /* Pods-Project1_1_H-Project1_1_HUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Project1_1_H-Project1_1_HUITests.release.xcconfig"; path = "Target Support Files/Pods-Project1_1_H-Project1_1_HUITests/Pods-Project1_1_H-Project1_1_HUITests.release.xcconfig"; sourceTree = "<group>"; };
 		FA4E4D2328B144F40064A6CC /* DatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePicker.swift; sourceTree = "<group>"; };
+		FA4E4D2528B220EE0064A6CC /* CustomTabBarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBarViewController.swift; sourceTree = "<group>"; };
 		FA61264228AB942700E4CD72 /* Project1_1_H.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Project1_1_H.entitlements; sourceTree = "<group>"; };
 		FA61264328AB942700E4CD72 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		FA61264528AB954600E4CD72 /* TableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewCell.swift; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 				FAA222DD28AB8E3D00DE9892 /* Project1_1_H.xcdatamodeld */,
 				FA61264528AB954600E4CD72 /* TableViewCell.swift */,
 				FA4E4D2328B144F40064A6CC /* DatePicker.swift */,
+				FA4E4D2528B220EE0064A6CC /* CustomTabBarViewController.swift */,
 			);
 			path = Project1_1_H;
 			sourceTree = "<group>";
@@ -417,6 +420,7 @@
 				FAA222DF28AB8E3D00DE9892 /* Project1_1_H.xcdatamodeld in Sources */,
 				FAA222D928AB8E3D00DE9892 /* ViewController.swift in Sources */,
 				FAA222D528AB8E3D00DE9892 /* AppDelegate.swift in Sources */,
+				FA4E4D2628B220EE0064A6CC /* CustomTabBarViewController.swift in Sources */,
 				FAA222D728AB8E3D00DE9892 /* SceneDelegate.swift in Sources */,
 				FA4E4D2428B144F40064A6CC /* DatePicker.swift in Sources */,
 			);

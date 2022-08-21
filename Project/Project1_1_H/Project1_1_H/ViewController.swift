@@ -169,6 +169,16 @@ class ViewController: UIViewController {
         
         sleepAndAwakeButton.addTarget(self, action: #selector(sleepAndAwakeButtonAction(_:)), for: .touchUpInside)
         alarmButton.addTarget(self, action: #selector(alarmButtonAction(_:)), for: .touchUpInside)
+        NotificationCenter.default.addObserver(self, selector: #selector(showPage(_:)), name: NSNotification.Name("showPage"), object: nil)
+    }
+    
+    @objc func showPage(_ notification:Notification) {
+        let myViewController = DatePicker()
+        
+        myViewController.modalPresentationStyle = .fullScreen
+        present(myViewController, animated: true, completion: nil)
+        
+        navigationController?.pushViewController(myViewController, animated: true)
     }
     
     @objc func alarmButtonAction(_: UIButton) {
