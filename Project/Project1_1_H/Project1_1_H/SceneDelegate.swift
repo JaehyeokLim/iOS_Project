@@ -19,6 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = ViewController()
+//        window?.rootViewController = DatePicker()
         window?.makeKeyAndVisible()
     }
 
@@ -44,4 +45,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to undo the changes made on entering the background.
     }
 }
+
 

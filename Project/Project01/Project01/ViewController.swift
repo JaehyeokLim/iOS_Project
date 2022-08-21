@@ -442,5 +442,3 @@ extension ViewController: AVAudioPlayerDelegate,CLLocationManagerDelegate {
         }
     }
 }
-
-one three five seven eight nine ten

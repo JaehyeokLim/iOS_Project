@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreData
+import UserNotifications
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -14,7 +15,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        UNUserNotificationCenter.current().delegate = self
+        application.registerForRemoteNotifications()
         return true
     }
 
@@ -79,3 +81,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 }
 
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    // 앱이 실행 중 일때 처리하는 메서드
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.list, .banner])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+            
+        let application = UIApplication.shared
+        
+        //앱이 켜져있는 상태에서 푸쉬 알림을 눌렀을 때
+        if application.applicationState == .active {
+            print("푸쉬알림 탭(앱 켜져있음)")
+            
+        }
+        
+        //앱이 꺼져있는 상태에서 푸쉬 알림을 눌렀을 때
+        if application.applicationState == .inactive {
+            print("푸쉬알림 탭(앱 꺼져있음)")
+            alarmState = true
+        }
+    }
+}

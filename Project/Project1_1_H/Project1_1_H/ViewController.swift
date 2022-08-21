@@ -1,12 +1,15 @@
 import UIKit
 import HealthKit
 import SnapKit
+import UserNotifications
+import CoreLocation
 
 public var userSleepStartDate: String = ""
 public var userSleepEndDate: String = ""
+public var alarmState: Bool = false
 
 class ViewController: UIViewController {
-
+    
     let healthStore = HKHealthStore()
     let typeToShare:HKCategoryType? = HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
     let typeToRead:HKSampleType? = HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
@@ -24,6 +27,19 @@ class ViewController: UIViewController {
     var sleepDateLoadTimer: Timer?
     var secondsLeft: Int = 900
     var secondsSave: Int = 900
+    let notificationCenter = UNUserNotificationCenter.current()
+    var locationManager = CLLocationManager()
+    
+    let alarmButton: UIButton = {
+        let alarmButton = UIButton()
+            
+        alarmButton.setImage(UIImage(systemName: "alarm.fill"), for: .normal)
+        alarmButton.tintColor = UIColor.systemBlue
+        alarmButton.contentVerticalAlignment = .fill
+        alarmButton.contentHorizontalAlignment = .fill
+        
+        return alarmButton
+    }()
     
     let sleepAndAwakeButton: UIButton = {
         let sleepAndAwakeButton = UIButton()
@@ -60,10 +76,34 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        saveSleepData()
+        
+        table.reloadData()
+        
         requestAuthorization()
         configure()
         timerFunction()
+        requestNotificationAuthorization()
+        sendNoti()
+        
+        getLocationUsagePermission()
+        
+        locationManager.delegate = self
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.requestAlwaysAuthorization()
+                
+        if CLLocationManager.locationServicesEnabled() {
+            print("위치 서비스 On 상태")
+            locationManager.startUpdatingLocation() //위치 정보 받아오기 시작
+            print(locationManager.location?.coordinate as Any)
+        } else {
+            print("위치 서비스 Off 상태")
+        }
+        
+        if alarmState == true {
+            datePickerPreview()
+            alarmState = false
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -86,7 +126,7 @@ class ViewController: UIViewController {
         table.dataSource = self
 //        table.delegate = self
 
-        uiList = [table, sleepAndAwakeButton, timerLabel, loadTimerLabel]
+        uiList = [table, sleepAndAwakeButton, timerLabel, loadTimerLabel, alarmButton]
         
         for uiListName in uiList {
             view.addSubview(uiListName)
@@ -112,6 +152,12 @@ class ViewController: UIViewController {
             make.top.equalTo(sleepAndAwakeButton).offset(150)
             make.width.equalTo(view)
         }
+        
+        alarmButton.snp.makeConstraints { make in
+            make.top.equalTo(view).offset(80)
+            make.trailing.equalTo(view).offset(-30)
+            make.size.equalTo(CGSize(width: 40, height: 40))
+        }
 
 
         if !HKHealthStore.isHealthDataAvailable() {
@@ -122,6 +168,42 @@ class ViewController: UIViewController {
         }
         
         sleepAndAwakeButton.addTarget(self, action: #selector(sleepAndAwakeButtonAction(_:)), for: .touchUpInside)
+        alarmButton.addTarget(self, action: #selector(alarmButtonAction(_:)), for: .touchUpInside)
+    }
+    
+    @objc func alarmButtonAction(_: UIButton) {
+        datePickerPreview()
+    }
+    
+    func datePickerPreview() {
+        let myViewController = DatePicker()
+        
+        myViewController.modalPresentationStyle = .fullScreen
+        present(myViewController, animated: true, completion: nil)
+    }
+    
+    func requestNotificationAuthorization() {
+        let authOptions: UNAuthorizationOptions = [.alert, .sound, .badge]
+
+        notificationCenter.requestAuthorization(options: authOptions) { success, error in
+            if let error = error {
+                print(error)
+            }
+        }
+    }
+    
+    func sendNoti() {
+        let sleepNotification = UNMutableNotificationContent()
+        
+        sleepNotification.title = "일어나셨나요? 알림을 클릭하셔서 입력해주세요!"
+        sleepNotification.title = "클릭해주세요!"
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+//        let request = UNNotificationRequest(identifier: UUID().uuidString, content: sleepNotification, trigger: trigger)
+        let request = UNNotificationRequest(identifier: "timerdone", content: sleepNotification, trigger: trigger)
+   
+
+        notificationCenter.add(request)
     }
     
     func timerFunction() {
@@ -227,6 +309,10 @@ class ViewController: UIViewController {
         
         buttonState = !buttonState
     }
+    
+    func aaa() {
+        
+    }
   
     func resetTimer() {
         timer?.invalidate()
@@ -289,8 +375,6 @@ class ViewController: UIViewController {
 
         healthStore.execute(query)
     }
-
-    
 
     func makeStringToDate(str:String) -> Date {
         let dateFormatter = DateFormatter()
@@ -361,7 +445,7 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController:UITableViewDataSource {
+extension ViewController: UITableViewDataSource, CLLocationManagerDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return sleepData.count
     }
@@ -387,4 +471,28 @@ extension ViewController:UITableViewDataSource {
 //        print(dateFormatter.date(from: date)?.timeIntervalSince1970)
         return cell
     }
+    
+    
+    func getLocationUsagePermission() {
+            
+        self.locationManager.requestWhenInUseAuthorization()
+
+    }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            print("GPS 권한 설정됨")
+        case .restricted, .notDetermined:
+            print("GPS 권한 설정되지 않음")
+            getLocationUsagePermission()
+        case .denied:
+            print("GPS 권한 요청 거부됨")
+            getLocationUsagePermission()
+        default:
+            print("GPS: Default")
+        }
+    }
 }
+
