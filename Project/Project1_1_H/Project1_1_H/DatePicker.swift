@@ -103,15 +103,22 @@ class DatePicker: UIViewController {
     }
     
     @objc func saveButtonAction(sender: UIDatePicker) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm"
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.timeZone = TimeZone(abbreviation: "KST")
         
-        if let choosenDateData = choosenDate.text {
-            if let date = formatter.date(from: choosenDateData) {
-                saveSleepData(start: date, end: Date())
-                print("\(date)")
+        if UserDefaults.standard.bool(forKey: "alarmCheck") {
+            print("이미했음!!")
+            
+        } else {
+            
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm"
+            formatter.locale = Locale(identifier: "ko_KR")
+            formatter.timeZone = TimeZone(abbreviation: "KST")
+            
+            if let choosenDateData = choosenDate.text {
+                if let date = formatter.date(from: choosenDateData) {
+                    saveSleepData(start: date, end: Date())
+                    print("\(date)")
+                }
             }
         }
         
@@ -137,6 +144,7 @@ class DatePicker: UIViewController {
 //                self.retrieveSleepData()
                 print("\(self.formatDate(date: start)), \(self.formatDate(date: end))")
                 self.csvDataPostToMobius(start: start, end: end)
+                UserDefaults.standard.set(true, forKey: "alarmCheck")
             } else {
                 print("수면 데이터 저장 실패...")
             }
