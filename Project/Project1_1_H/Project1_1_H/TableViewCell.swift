@@ -35,7 +35,9 @@ class ViewTableCell: UITableViewCell {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         
         let aaab = date.timeIntervalSince1970
-        text.text = "\(Int(aaab)): sleep start time is \(start) and awake time is \(end)"
+//        text.text = "\(Int(aaab)): sleep start time is \(start) and awake time is \(end)"
+        text.text = "\(date): sleep start time is \(start) and awake time is \(end)"
+
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

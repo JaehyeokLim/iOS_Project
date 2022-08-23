@@ -86,12 +86,15 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.list, .banner])
         
+//        UserDefaults.standard.set(false, forKey: "alramCheck")
+//        ViewController().aaa()
         NotificationCenter.default.post(name: Notification.Name("showPage"), object: nil, userInfo: ["index":1])
 
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-
+        
+//        UserDefaults.standard.set(false, forKey: "alramCheck")
         NotificationCenter.default.post(name: Notification.Name("showPage"), object: nil, userInfo: ["index":1])
 
     }
